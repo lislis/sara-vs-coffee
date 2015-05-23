@@ -104,6 +104,9 @@ class Player
    @image_normal = Gosu::Image.new('assets/sara_normal.png')
    @image = @image_normal
 
+   @typing = Gosu::Sample.new('sounds/typing.wav')
+   @drinking = Gosu::Sample.new('sounds/gulp.wav')
+
    @x = @y = 0
    @caffeine = 50
    @money = 0
@@ -162,6 +165,7 @@ class Player
   def work_computer(computer)
     if computer.is_visible? then
       if Gosu::distance(@x, @y, computer.x, computer.y) < 40 then
+        @typing.play
         output = "You made some money"
         @money = @money + SALARY
         computer.toggle_visibility
@@ -172,6 +176,7 @@ class Player
   def drink_coffee(coffee)
     if coffee.is_visible? then
       if Gosu::distance(@x, @y, coffee.x, coffee.y) < 40 then
+        @drinking.play
         @output.set_output "You drank cup of coffee"
         coffee.set_consumed
         @caffeine = @caffeine + CAFFEINE
@@ -260,12 +265,14 @@ class Barista
     @image_front = Gosu::Image.new('assets/barista.png')
     @image_back = Gosu::Image.new('assets/barista_back.png')
     @image = @image_front
+
+    @latte = Gosu::Sample.new('sounds/latte-maker.wav')
     
     @old_time_since = 0
     @time_since = 0
     @delta_time = 0
 
-    @prep_time = 5000
+    @prep_time = 6000
     @timer = 0
 
     @is_preping = false
@@ -321,7 +328,8 @@ class Barista
       @old_time_since = @time_since
 
       @timer = @timer + @delta_time
-      if @timer > @prep_time then
+      if @timer >= @prep_time then
+        @latte.play
         @timer = 0
         @is_preping = false
         coffee.set_ready
