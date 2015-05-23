@@ -15,6 +15,7 @@ class GameWindow < Gosu::Window
     @state = 'game'
     @state_message = ''
     @output = Output.new
+    @background = Gosu::Image.new('assets/background_pixel.png')
 
     @player = Player.new(@output)
     @player.warp(300, 300)
@@ -22,7 +23,6 @@ class GameWindow < Gosu::Window
     @barista = Barista.new(@output)
     @barista.warp(720, 40)
 
-    @counter = Counter.new
     @computer = Computer.new(@output)
     @coffee = Coffee.new
 
@@ -62,7 +62,8 @@ class GameWindow < Gosu::Window
   def draw
 
     if @state == 'game' then
-      @counter.draw
+      
+      @background.draw(0, 0, ZOrder::Background)
       @player.draw
       @barista.draw
       @computer.draw
@@ -311,17 +312,6 @@ class Barista
 
   def draw
     @image.draw(@x, @y, ZOrder::Barista, 0.15, 0.15)
-  end
-end
-
-class Counter
-
-  def initialize
-    @image = Gosu::Image.new('assets/counter.png')
-  end
-
-  def draw
-    @image.draw(750, 0, ZOrder::Background)
   end
 end
 
