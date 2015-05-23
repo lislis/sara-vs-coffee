@@ -20,15 +20,17 @@ class GameWindow < Gosu::Window
   def update
 
     if Gosu::button_down? Gosu::KbLeft or Gosu::button_down? Gosu::GpLeft then
-      @player.turn_left
+      @player.move_left
     end
     if Gosu::button_down? Gosu::KbRight or Gosu::button_down? Gosu::GpRight then
-      @player.turn_right
+      @player.move_right
     end
     if Gosu::button_down? Gosu::KbUp or Gosu::button_down? Gosu::GpButton0 then
-      @player.accelerate
+      @player.move_up
     end
-    @player.move
+    if Gosu::button_down? Gosu::KbDown or Gosu::button_down? Gosu::GpButton1 then
+      @player.move_down
+    end
 
     @barista.moving
   end
@@ -54,10 +56,10 @@ class Player
 
   def initialize
    @image = Gosu::Image.new('assets/player.png')
-   @x = @y = @vel_x = @vel_y = @angle = 0.0
+   @x = @y = 0
    @caffeine = 0
    @money = 0
-   @speed = 1
+   @speed = 2
 
    @caffeine_min = 0
    @caffeine_max = 100
@@ -74,31 +76,24 @@ class Player
     @x, @y = x, y
   end
 
-  def turn_left
-    @angle -= 4.5
+  def move_left
+    @x = @x - @speed
   end
 
-  def turn_right
-    @angle += 4.5
+  def move_right
+    @x = @x + @speed
   end
 
-  def accelerate
-    @vel_x = Gosu::offset_x(@angle, 0.5)
-    @vel_y = Gosu::offset_y(@angle, 0.5)
+  def move_up
+    @y = @y - @speed
   end
 
-  def move
-    @x += @vel_x
-    @y += @vel_y
-    @x = @x % 960
-    @y = @y % 640
-
-    @vel_x *= 0.95
-    @vel_y *= 0.95
+  def move_down
+    @y = @y + @speed
   end
 
   def draw
-    @image.draw_rot(@x, @y, ZOrder::Player, @angle)
+    @image.draw(@x, @y, ZOrder::Player)
   end
 
 end
