@@ -13,6 +13,7 @@ class GameWindow < Gosu::Window
 
     @counter = Counter.new
     @computer = Computer.new
+    @coffee = Coffee.new
 
     @font = Gosu::Font.new(20)
   end
@@ -40,6 +41,7 @@ class GameWindow < Gosu::Window
     @player.draw
     @barista.draw
     @computer.draw
+    @coffee.draw
     @font.draw("Coffees consumed: #{@player.cups}", 10, 10, ZOrder::UI, 1.0, 1.0, 0xff_fff00)
   end
 
@@ -169,8 +171,25 @@ class Computer
       @image.draw(@x, @y, ZOrder::Barista)
     end
   end
+end
+
+class Coffee
+
+  def initialize
+    @image = Gosu::Image.new('assets/player.png')
+    @is_visible = false
+    @x = @y = 0
+  end
+
+  def draw
+    if @is_visible then
+      @image.draw(@x, @y, ZOrder::Barista)
+    end
+  end
 
 end
+
+
 
 window = GameWindow.new
 window.show
