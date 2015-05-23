@@ -7,6 +7,8 @@ COFFEE_PRICE = 15
 SALARY = 5
 CAFFEINE = 30
 
+COUNTER = 760
+
 class GameWindow < Gosu::Window
   def initialize
     super WIDTH, HEIGHT
@@ -21,7 +23,7 @@ class GameWindow < Gosu::Window
     @player.warp(300, 300)
 
     @barista = Barista.new(@output)
-    @barista.warp(720, 40)
+    @barista.warp(40)
 
     @computer = Computer.new(@output)
     @coffee = Coffee.new
@@ -95,7 +97,13 @@ class Player
 
   def initialize(output)
    @output = output
-   @image = Gosu::Image.new('assets/sara_normal.png')
+
+   @image_back = Gosu::Image.new('assets/sara_back.png')
+   @image_sad = Gosu::Image.new('assets/sara_sad.png')
+   @image_happy = Gosu::Image.new('assets/sara_happy.png')
+   @image_normal = Gosu::Image.new('assets/sara_normal.png')
+   @image = @image_normal
+
    @x = @y = 0
    @caffeine = 50
    @money = 0
@@ -137,7 +145,7 @@ class Player
   end
 
   def talk_barista(barista)
-    if Gosu::distance(@x, @y, barista.x, barista.y) < 80 then
+    if Gosu::distance(@x, @y, barista.x, barista.y) < 120 then
       barista.set_talking
       if @money >= COFFEE_PRICE then
         @output.set_output "You ordered coffee"
@@ -174,7 +182,10 @@ class Player
   end
 
   def adjust_speed
-    @caffeine * 0.1 - 1
+    
+    unless @speed < 1
+      @caffeine * 0.1 - 1
+    end
   end
 
   def decrease_caffeine
@@ -196,11 +207,22 @@ class Player
       
   end
 
+  def caffeine_level
+    if @caffeine > 70 then
+      @image = @image_happy
+    elsif @caffeine < 40 then
+      @image = @image_sad
+    else
+      @image = @image_normal
+    end
+  end
+
   def update(barista, computer, coffee)
     talk_barista barista
     work_computer computer
     drink_coffee coffee
     decrease_caffeine
+    caffeine_level
   end
 
   def draw
@@ -235,7 +257,9 @@ class Barista
 
   def initialize(output)
     @output = output
-    @image = Gosu::Image.new('assets/barista.png')
+    @image_front = Gosu::Image.new('assets/barista.png')
+    @image_back = Gosu::Image.new('assets/barista_back.png')
+    @image = @image_front
     
     @old_time_since = 0
     @time_since = 0
@@ -251,19 +275,22 @@ class Barista
 
     @y_min = 20
     @y_max = 480
-    @x = @y = 0
+    @x = COUNTER + 145
+    @y = 0
   end
 
-  def warp(x, y)
-    @x, @y = x, y
+  def warp(y)
+    @y = y
   end
 
   def walking_dir
     if @y > @y_max then
       @walking_speed = -2
+      @image = @image_back
     end
     if @y < @y_min then
       @walking_speed = 2
+      @image = @image_front
     end
   end
 
@@ -386,12 +413,12 @@ class Coffee
   def initialize
     @image = Gosu::Image.new('assets/coffee_1.png')
     @is_visible = false
-    @x = 750
+    @x = COUNTER + 10
     @y = 0
   end
 
   def randNum
-    (0..580).to_a.sample
+    (0..560).to_a.sample
   end
 
   def randPos
