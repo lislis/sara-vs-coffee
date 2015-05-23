@@ -5,9 +5,9 @@ class GameWindow < Gosu::Window
     super 960, 640
     self.caption = 'Sara vs Coffee'
 
-
     @player = Player.new
-    @player.warp(50,50)
+    @player.warp(300, 300)
+    @font = Gosu::Font.new(20)
    end
 
   def update
@@ -26,6 +26,7 @@ class GameWindow < Gosu::Window
 
   def draw
     @player.draw
+    @font.draw("Coffees consumed: #{@player.cups}", 10, 10, ZOrder::UI, 1.0, 1.0, 0xff_fff00)
   end
 
   def button_down(id)
@@ -36,6 +37,9 @@ class GameWindow < Gosu::Window
 end
 
 class Player
+
+  attr_reader :cups
+
   def initialize
    @image = Gosu::Image.new('assets/player.png')
    @x = @y = @vel_x = @vel_y = @angle = 0.0
@@ -48,6 +52,10 @@ class Player
 
    @cups = 0
    @cups_goal = 100
+  end
+
+  def cups
+    @cups
   end
   
   def warp(x, y)
@@ -78,9 +86,13 @@ class Player
   end
 
   def draw
-    @image.draw_rot(@x, @y, 1, @angle)
+    @image.draw_rot(@x, @y, ZOrder::Player, @angle)
   end
 
+end
+
+module ZOrder
+  Background, Stars, Player, UI = *0..3
 end
 
 window = GameWindow.new
