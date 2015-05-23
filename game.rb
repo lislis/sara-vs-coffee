@@ -33,7 +33,9 @@ class GameWindow < Gosu::Window
       @player.move_down
     end
 
-    @barista.moving
+    @player.update(@barista, @computer)
+    @computer.update
+    @barista.update
   end
 
   def draw
@@ -42,7 +44,7 @@ class GameWindow < Gosu::Window
     @barista.draw
     @computer.draw
     @coffee.draw
-    @font.draw("Coffees consumed: #{@player.cups}", 10, 10, ZOrder::UI, 1.0, 1.0, 0xff_fff00)
+    @font.draw("Coffees consumed: #{@player.cups}", 30, 30, 10, 1, 1, 0xff_fffff)
   end
 
   def button_down(id)
@@ -94,6 +96,36 @@ class Player
     @y = @y + @speed
   end
 
+  def talk_barista(barista)
+    if Gosu::distance(@x, @y, barista.x, barista.y) < 80 then
+      barista.set_talking
+      if @money > 15 then
+        puts 'ordered a coffee'
+        @money = @money - 15
+        barista.set_preping
+      else
+        puts 'not enough money'
+      end
+    else
+      barista.set_walking
+    end
+  end
+
+  def work_computer(computer)
+    if computer.is_visible? then
+      if Gosu::distance(@x, @y, computer.x, computer.y) < 30 then
+        puts 'got some work to do'
+        @money = @money + 5
+        computer.toggle_visibility
+      end
+    end
+  end
+
+  def update(barista, computer)
+    talk_barista barista
+    work_computer computer
+  end
+
   def draw
     @image.draw(@x, @y, ZOrder::Player)
   end
@@ -106,11 +138,18 @@ end
 
 class Barista
 
-  attr_accessor :is_preping
+  attr_accessor :is_preping, :x, :y
 
   def initialize
     @image = Gosu::Image.new('assets/player.png')
-    @prep_time = 4
+    
+    @old_time_since = 0
+    @time_since = 0
+    @delta_time = 0
+
+    @prep_time = 1000
+    @timer = 0
+
     @is_preping = false
     @is_talking = false
     @walking_up = false
@@ -141,6 +180,42 @@ class Barista
     end
   end
 
+  def set_talking
+    @is_talking = true
+  end
+
+  def set_walking
+    @is_talking = false
+  end
+
+  def set_preping
+    @is_preping = true
+  end
+
+  def prep_coffee(coffee)
+    if !@is_talking then
+      
+      @time_since = Gosu::milliseconds
+      @delta_time = @time_since - @old_time_since
+      @old_time_since = @time_since
+
+      @timer = @timer + @delta_time
+      if @timer > @prep_time then
+        @timer = 0
+        @is_preping = false
+        coffee.set_ready
+        puts "coffee is done"
+      end
+    end
+  end
+
+  def update(coffee)
+    moving
+    if @is_preping then
+      prep_coffee(coffee)
+    end
+  end
+
   def draw
     @image.draw(@x, @y, ZOrder::Barista)
   end
@@ -159,26 +234,63 @@ end
 
 class Computer
 
+  attr_accessor :is_visible, :x, :y
+
   def initialize
     @image = Gosu::Image.new('assets/player.png')
-    @is_visible = true
+    @is_visible = false
+    @time_to_activate = 300
+    @timer = 0
+
+    @old_time_since = 0
+    @time_since = 0
+    @delta_time = 0
     @x = @y = 0
   end
 
   def randNum
-    0..600.to_a.sample
+    (0..600).to_a.sample
   end
 
   def randPos
     @x, @y = randNum, randNum
   end
 
-  def toggleVisibility
-    @is_visible = !!@is_visible
+  def update
+    if !is_visible? then
+      prepare
+    end
+  end
+
+  def prepare
+   @time_since = Gosu::milliseconds
+   @delta_time = @time_since - @old_time_since
+   @old_time_since = @time_since
+
+   @timer = @timer + @delta_time
+
+   if @timer > @time_to_activate then
+     @timer = 0
+     randPos
+     toggle_visibility
+     puts 'more work'
+   end
+  end
+
+  def toggle_visibility
+    if @is_visible then
+      @is_visible = false
+    else
+      @is_visible = true
+    end
+  end
+
+  def is_visible?
+    @is_visible
   end
 
   def draw
-    if @is_visible then
+    if is_visible? then
       @image.draw(@x, @y, ZOrder::Barista)
     end
   end
@@ -199,7 +311,6 @@ class Coffee
   end
 
 end
-
 
 
 window = GameWindow.new
