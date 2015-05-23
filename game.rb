@@ -106,14 +106,15 @@ end
 
 class Barista
 
-  attr_accessor :is_preping, :bribe_level
+  attr_accessor :is_preping
 
   def initialize
     @image = Gosu::Image.new('assets/player.png')
     @prep_time = 4
     @is_preping = false
     @is_talking = false
-    @bribe_level = 0
+    @walking_up = false
+    @walking_speed = 2
 
     @y_min = 20
     @y_max = 550
@@ -124,9 +125,19 @@ class Barista
     @x, @y = x, y
   end
 
+  def walking_dir
+    if @y > @y_max then
+      @walking_speed = -2
+    end
+    if @y < @y_min then
+      @walking_speed = 2
+    end
+  end
+
   def moving
     if !@is_talking then
-      
+      walking_dir
+      @y = @y + @walking_speed
     end
   end
 
