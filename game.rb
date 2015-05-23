@@ -11,10 +11,27 @@ class GameWindow < Gosu::Window
    end
 
   def update
+
+    if Gosu::button_down? Gosu::KbLeft or Gosu::button_down? Gosu::GpLeft then
+      @player.turn_left
+    end
+    if Gosu::button_down? Gosu::KbRight or Gosu::button_down? Gosu::GpRight then
+      @player.turn_right
+    end
+    if Gosu::button_down? Gosu::KbUp or Gosu::button_down? Gosu::GpButton0 then
+      @player.accelerate
+    end
+    @player.move
   end
 
   def draw
     @player.draw
+  end
+
+  def button_down(id)
+    if id == Gosu::KbEscape
+      close
+    end
   end
 end
 
@@ -32,9 +49,32 @@ class Player
    @cups = 0
    @cups_goal = 100
   end
-
+  
   def warp(x, y)
     @x, @y = x, y
+  end
+
+  def turn_left
+    @angle -= 4.5
+  end
+
+  def turn_right
+    @angle += 4.5
+  end
+
+  def accelerate
+    @vel_x = Gosu::offset_x(@angle, 0.5)
+    @vel_y = Gosu::offset_y(@angle, 0.5)
+  end
+
+  def move
+    @x += @vel_x
+    @y += @vel_y
+    @x = @x % 960
+    @y = @y % 640
+
+    @vel_x *= 0.95
+    @vel_y *= 0.95
   end
 
   def draw
