@@ -1,5 +1,8 @@
 require ('gosu')
 
+WIDTH = 960
+HEIGHT = 640
+
 class GameWindow < Gosu::Window
   def initialize
     super 960, 640
@@ -70,7 +73,7 @@ class Player
   attr_reader :cups
 
   def initialize
-   @image = Gosu::Image.new('assets/player.png')
+   @image = Gosu::Image.new('assets/sara_normal.png')
    @x = @y = 0
    @caffeine = 0
    @money = 0
@@ -124,7 +127,7 @@ class Player
 
   def work_computer(computer)
     if computer.is_visible? then
-      if Gosu::distance(@x, @y, computer.x, computer.y) < 30 then
+      if Gosu::distance(@x, @y, computer.x, computer.y) < 40 then
         puts 'got some work to do'
         @money = @money + 5
         computer.toggle_visibility
@@ -134,7 +137,7 @@ class Player
 
   def drink_coffee(coffee)
     if coffee.is_visible? then
-      if Gosu::distance(@x, @y, coffee.x, coffee.y) < 30 then
+      if Gosu::distance(@x, @y, coffee.x, coffee.y) < 40 then
         puts 'OMG coffee'
         coffee.set_consumed
         @caffeine = @caffeine + 1
@@ -151,7 +154,7 @@ class Player
   end
 
   def draw
-    @image.draw(@x, @y, ZOrder::Player)
+    @image.draw(@x, @y, ZOrder::Player, 0.3, 0.3)
   end
 
 end
@@ -165,7 +168,7 @@ class Barista
   attr_accessor :is_preping, :x, :y
 
   def initialize
-    @image = Gosu::Image.new('assets/player.png')
+    @image = Gosu::Image.new('assets/barista.png')
     
     @old_time_since = 0
     @time_since = 0
@@ -241,7 +244,7 @@ class Barista
   end
 
   def draw
-    @image.draw(@x, @y, ZOrder::Barista)
+    @image.draw(@x, @y, ZOrder::Barista, 0.15, 0.15)
   end
 end
 
@@ -261,7 +264,7 @@ class Computer
   attr_accessor :is_visible, :x, :y
 
   def initialize
-    @image = Gosu::Image.new('assets/player.png')
+    @image = Gosu::Image.new('assets/computer_1.png')
     @is_visible = false
     @time_to_activate = 300
     @timer = 0
@@ -315,7 +318,7 @@ class Computer
 
   def draw
     if is_visible? then
-      @image.draw(@x, @y, ZOrder::Barista)
+      @image.draw(@x, @y, ZOrder::Barista, 0.3, 0.3)
     end
   end
 end
@@ -325,8 +328,8 @@ class Coffee
   attr_accessor :is_visible, :x, :y
 
   def initialize
-    @image = Gosu::Image.new('assets/player.png')
-    @is_visible = false
+    @image = Gosu::Image.new('assets/coffee_1.png')
+    @is_visible = true
     @x = 750
     @y = 0
   end
@@ -354,7 +357,7 @@ class Coffee
 
   def draw
     if @is_visible then
-      @image.draw(@x, @y, ZOrder::Barista)
+      @image.draw(@x, @y, ZOrder::Barista, 0.3, 0.3)
     end
   end
 
