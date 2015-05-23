@@ -33,9 +33,9 @@ class GameWindow < Gosu::Window
       @player.move_down
     end
 
-    @player.update(@barista, @computer)
+    @player.update(@barista, @computer, @coffee)
     @computer.update
-    @barista.update
+    @barista.update(@coffee)
   end
 
   def draw
@@ -121,9 +121,22 @@ class Player
     end
   end
 
-  def update(barista, computer)
+  def drink_coffee(coffee)
+    if coffee.is_visible? then
+      if Gosu::distance(@x, @y, coffee.x, coffee.y) < 30 then
+        puts 'OMG coffee'
+        coffee.set_consumed
+        @caffeine = @caffeine + 1
+        @speed = @speed + @caffeine
+        @cups = @cups + 1
+      end
+    end
+  end
+
+  def update(barista, computer, coffee)
     talk_barista barista
     work_computer computer
+    drink_coffee coffee
   end
 
   def draw
@@ -147,7 +160,7 @@ class Barista
     @time_since = 0
     @delta_time = 0
 
-    @prep_time = 1000
+    @prep_time = 2000
     @timer = 0
 
     @is_preping = false
@@ -228,7 +241,7 @@ class Counter
   end
 
   def draw
-    @image.draw(680, 0, ZOrder::Background)
+    @image.draw(750, 0, ZOrder::Background)
   end
 end
 
@@ -298,10 +311,34 @@ end
 
 class Coffee
 
+  attr_accessor :is_visible, :x, :y
+
   def initialize
     @image = Gosu::Image.new('assets/player.png')
     @is_visible = false
-    @x = @y = 0
+    @x = 750
+    @y = 0
+  end
+
+  def randNum
+    (0..620).to_a.sample
+  end
+
+  def randPos
+    @y = randNum
+  end
+
+  def set_ready
+    @is_visible = true
+    randPos
+  end
+
+  def is_visible?
+    @is_visible
+  end
+
+  def set_consumed
+    @is_visible = false
   end
 
   def draw
