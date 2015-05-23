@@ -3,24 +3,30 @@ require ('gosu')
 WIDTH = 960
 HEIGHT = 640
 
+COFFEE_PRICE = 15
+SALARY = 5
+CAFFEINE = 30
+
 class GameWindow < Gosu::Window
   def initialize
-    super 960, 640
+    super WIDTH, HEIGHT
     self.caption = 'Sara vs Coffee'
 
     @state = 'game'
+    @state_message = ''
+    @output = Output.new
 
-    @player = Player.new
+    @player = Player.new(@output)
     @player.warp(300, 300)
 
-    @barista = Barista.new
+    @barista = Barista.new(@output)
     @barista.warp(720, 40)
 
     @counter = Counter.new
-    @computer = Computer.new
+    @computer = Computer.new(@output)
     @coffee = Coffee.new
 
-    @font = Gosu::Font.new(20)
+    @font = Gosu::Font.new(24)
   end
 
   def update
@@ -42,23 +48,37 @@ class GameWindow < Gosu::Window
       @player.update(@barista, @computer, @coffee)
       @computer.update
       @barista.update(@coffee)
-      
-    elsif @state == 'win' then
 
-    elsif @status == 'lose' then
-
+      if @player.check_state == 'win' then
+        set_state_message 'You win'
+        @state = 'win'
+      elsif @player.check_state == 'lose' then
+        set_state_message 'You lose' 
+        @state = 'lose'
+      end
     end
-
-
   end
 
   def draw
-    @counter.draw
-    @player.draw
-    @barista.draw
-    @computer.draw
-    @coffee.draw
-    @font.draw("Coffees consumed: #{@player.cups}", 30, 30, 10, 1, 1, 0xff_fffff)
+
+    if @state == 'game' then
+      @counter.draw
+      @player.draw
+      @barista.draw
+      @computer.draw
+      @coffee.draw
+      @font.draw("Coffees consumed: #{@player.cups} of #{@player.cups_goal}", 20, 15, 10)
+      @font.draw("Caffeine Level: #{@player.caffeine.ceil}", 20, 35, 11)
+      @font.draw("Money available: #{@player.money}", 20, 55, 11)
+      @font.draw(@output.output.to_s, 350, 500, 11)
+    else
+      @font.draw("#{@state_message}", 30, 30, 10, 1, 1)
+    end
+
+  end
+
+  def set_state_message(msg)
+    @state_message = msg
   end
 
   def button_down(id)
@@ -70,20 +90,25 @@ end
 
 class Player
 
-  attr_reader :cups
+  attr_reader :cups, :caffeine, :cups_goal, :money
 
-  def initialize
+  def initialize(output)
+   @output = output
    @image = Gosu::Image.new('assets/sara_normal.png')
    @x = @y = 0
-   @caffeine = 0
+   @caffeine = 50
    @money = 0
-   @speed = 2
+   @speed = 2.4
 
    @caffeine_min = 0
    @caffeine_max = 100
 
    @cups = 0
-   @cups_goal = 100
+   @cups_goal = 20
+
+   @old_time_since = 0
+   @time_since = 0
+   @delta_time = 0
   end
 
   def cups
@@ -113,12 +138,12 @@ class Player
   def talk_barista(barista)
     if Gosu::distance(@x, @y, barista.x, barista.y) < 80 then
       barista.set_talking
-      if @money > 15 then
-        puts 'ordered a coffee'
-        @money = @money - 15
+      if @money >= COFFEE_PRICE then
+        @output.set_output "You ordered coffee"
+        @money = @money - COFFEE_PRICE
         barista.set_preping
       else
-        puts 'not enough money'
+        @output.set_output "You need more money"
       end
     else
       barista.set_walking
@@ -128,8 +153,8 @@ class Player
   def work_computer(computer)
     if computer.is_visible? then
       if Gosu::distance(@x, @y, computer.x, computer.y) < 40 then
-        puts 'got some work to do'
-        @money = @money + 5
+        output = "You made some money"
+        @money = @money + SALARY
         computer.toggle_visibility
       end
     end
@@ -138,19 +163,43 @@ class Player
   def drink_coffee(coffee)
     if coffee.is_visible? then
       if Gosu::distance(@x, @y, coffee.x, coffee.y) < 40 then
-        puts 'OMG coffee'
+        @output.set_output "You drank cup of coffee"
         coffee.set_consumed
-        @caffeine = @caffeine + 1
-        @speed = @speed + @caffeine
+        @caffeine = @caffeine + CAFFEINE
+        @speed = adjust_speed
         @cups = @cups + 1
       end
     end
+  end
+
+  def adjust_speed
+    @caffeine * 0.1 - 1
+  end
+
+  def decrease_caffeine
+    @time_since = Gosu::milliseconds
+    @delta_time = @time_since - @old_time_since
+    @old_time_since = @time_since
+    @caffeine = @caffeine - (@delta_time * 0.001)
+    @speed = adjust_speed
+  end
+
+  def check_state
+    if @cups >= @cups_goal then
+      return 'win'
+    end
+
+    if @caffeine > @caffeine_max || @caffeine < @caffeine_min then
+      return 'lose'
+    end
+      
   end
 
   def update(barista, computer, coffee)
     talk_barista barista
     work_computer computer
     drink_coffee coffee
+    decrease_caffeine
   end
 
   def draw
@@ -163,18 +212,35 @@ module ZOrder
   Background, Barista, Player, UI = *0..3
 end
 
+class Output
+
+  def initialize
+    @output = ''
+  end
+
+  def output
+    @output
+  end
+  
+  def set_output(out)
+    @output = out
+  end
+  
+end
+
 class Barista
 
   attr_accessor :is_preping, :x, :y
 
-  def initialize
+  def initialize(output)
+    @output = output
     @image = Gosu::Image.new('assets/barista.png')
     
     @old_time_since = 0
     @time_since = 0
     @delta_time = 0
 
-    @prep_time = 2000
+    @prep_time = 5000
     @timer = 0
 
     @is_preping = false
@@ -183,7 +249,7 @@ class Barista
     @walking_speed = 2
 
     @y_min = 20
-    @y_max = 550
+    @y_max = 480
     @x = @y = 0
   end
 
@@ -231,7 +297,7 @@ class Barista
         @timer = 0
         @is_preping = false
         coffee.set_ready
-        puts "coffee is done"
+        @output.set_output "The barista fixed you a coffee"
       end
     end
   end
@@ -263,10 +329,11 @@ class Computer
 
   attr_accessor :is_visible, :x, :y
 
-  def initialize
+  def initialize(output)
+    @output = output
     @image = Gosu::Image.new('assets/computer_1.png')
     @is_visible = false
-    @time_to_activate = 300
+    @time_to_activate = 1500
     @timer = 0
 
     @old_time_since = 0
@@ -276,7 +343,7 @@ class Computer
   end
 
   def randNum
-    (0..600).to_a.sample
+    (0..580).to_a.sample
   end
 
   def randPos
@@ -300,7 +367,6 @@ class Computer
      @timer = 0
      randPos
      toggle_visibility
-     puts 'more work'
    end
   end
 
@@ -329,13 +395,13 @@ class Coffee
 
   def initialize
     @image = Gosu::Image.new('assets/coffee_1.png')
-    @is_visible = true
+    @is_visible = false
     @x = 750
     @y = 0
   end
 
   def randNum
-    (0..620).to_a.sample
+    (0..580).to_a.sample
   end
 
   def randPos
