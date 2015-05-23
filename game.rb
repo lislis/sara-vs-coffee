@@ -5,6 +5,8 @@ class GameWindow < Gosu::Window
     super 960, 640
     self.caption = 'Sara vs Coffee'
 
+    @state = 'game'
+
     @player = Player.new
     @player.warp(300, 300)
 
@@ -20,22 +22,31 @@ class GameWindow < Gosu::Window
 
   def update
 
-    if Gosu::button_down? Gosu::KbLeft or Gosu::button_down? Gosu::GpLeft then
-      @player.move_left
-    end
-    if Gosu::button_down? Gosu::KbRight or Gosu::button_down? Gosu::GpRight then
-      @player.move_right
-    end
-    if Gosu::button_down? Gosu::KbUp or Gosu::button_down? Gosu::GpButton0 then
-      @player.move_up
-    end
-    if Gosu::button_down? Gosu::KbDown or Gosu::button_down? Gosu::GpButton1 then
-      @player.move_down
+    if @state == 'game' then
+      if Gosu::button_down? Gosu::KbLeft or Gosu::button_down? Gosu::GpLeft then
+        @player.move_left
+      end
+      if Gosu::button_down? Gosu::KbRight or Gosu::button_down? Gosu::GpRight then
+        @player.move_right
+      end
+      if Gosu::button_down? Gosu::KbUp or Gosu::button_down? Gosu::GpButton0 then
+        @player.move_up
+      end
+      if Gosu::button_down? Gosu::KbDown or Gosu::button_down? Gosu::GpButton1 then
+        @player.move_down
+      end
+
+      @player.update(@barista, @computer, @coffee)
+      @computer.update
+      @barista.update(@coffee)
+      
+    elsif @state == 'win' then
+
+    elsif @status == 'lose' then
+
     end
 
-    @player.update(@barista, @computer, @coffee)
-    @computer.update
-    @barista.update(@coffee)
+
   end
 
   def draw
