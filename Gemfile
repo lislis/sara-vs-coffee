@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
-ruby '2.1.5'
+ruby '2.7.1'
 
-gem 'gosu', '~> 0.9.2'
+gem 'gosu', '~> 0.15.1'
